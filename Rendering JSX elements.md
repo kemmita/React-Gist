@@ -4,10 +4,18 @@
 ```
 2. Below is the jsx code. In order to have multiple html elements, they must be wrapped in a main div tag.
 ```
+const decision = {
+    title: 'Indecision App!',
+    subtitle: 'Lorem ipsum dolor sit amet.'
+};
+const item = ['item one', 'item two'];
 let template = (
     <div>
-        <h1>Hey therse</h1>
-        <p>this is jsx bitches</p>
+        <h1>{decision.title}</h1>
+        <p>{decision.subtitle}</p>
+        <ol>
+            {item[0]}
+        </ol>
     </div>
 );
 
