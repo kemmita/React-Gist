@@ -1,4 +1,5 @@
 1. We cannot use things like if or for. We need to do that in a function and then call that funciton in the react template
+look at part two below
 ```
 // JSX
 let decision = {
@@ -14,6 +15,20 @@ const chkSubtitle = (subtitle) => {
 let template = (
     <div>
         <h1>{decision.title}</h1>
+        <p>{chkSubtitle(decision.subtitle)}</p>
+        <ol>
+            <li>{item[0]}</li>
+        </ol>
+    </div>
+);
+
+ReactDOM.render(template, document.getElementById('root'));
+```
+2. We can use js operators in the react templates to check conditions
+```
+let template = (
+    <div>
+        <h1>{decision.title.length >= 20 ? 'Click to view title' : decision.title}</h1>
         <p>{chkSubtitle(decision.subtitle)}</p>
         <ol>
             <li>{item[0]}</li>
