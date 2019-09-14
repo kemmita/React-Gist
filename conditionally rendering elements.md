@@ -38,3 +38,16 @@ let template = (
 
 ReactDOM.render(template, document.getElementById('root'));
 ```
+3. if you simply want to check a boolean to see if you should display an element or not, use the React && trick!
+```
+let template = (
+    <div>
+        {decision.subtitle && <p>{decision.subtitle}</p>}
+        <ol>
+            <li>options array here</li>
+        </ol>
+    </div>
+);
+
+ReactDOM.render(template, document.getElementById('root'));
+```
