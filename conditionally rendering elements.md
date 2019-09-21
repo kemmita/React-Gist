@@ -1,6 +1,6 @@
 1. We cannot use things like if or for. We need to do that in a function and then call that funciton in the react template
 look at part two below
-```
+```js
 // JSX
 let decision = {
     title: 'Indecision App!',
@@ -25,7 +25,7 @@ let template = (
 ReactDOM.render(template, document.getElementById('root'));
 ```
 2. We can use js operators in the react templates to check conditions
-```
+```js
 let template = (
     <div>
         <h1>{decision.title.length >= 20 ? 'Click to view title' : decision.title}</h1>
@@ -39,7 +39,7 @@ let template = (
 ReactDOM.render(template, document.getElementById('root'));
 ```
 3. if you simply want to check a boolean to see if you should display an element or not, use the React && trick!
-```
+```js
 let template = (
     <div>
         {decision.subtitle && <p>{decision.subtitle}</p>}
