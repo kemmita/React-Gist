@@ -72,3 +72,111 @@ const NavBar: React.FC<IProps> = (props) => {
 
 export default observer(NavBar);
 ```
+5.Creating a Dynamic route with an id
+```ts
+import React, {useEffect, Fragment, useContext} from 'react';
+const App = () => {
+  const activityStore = useContext(ActivityStore);
+
+  useEffect (() =>{
+      activityStore.loadActivities();
+  }, [activityStore]);
+
+  if (activityStore.loadingInitial) return <LoadingComponent content={'Loading Activities...'} />;
+    return (
+        <Fragment>
+            <NavBar />
+            <Container style={{marginTop: '7em'}}>
+                //the path uses a ":" which singifies a url param so this will be localhost:3000/activities/17263hshs
+                <Route exact path='/activity/:id' component={ActivityDetails}/>
+            </Container>
+        </Fragment>
+    );
+};
+
+export default observer(App);
+```
+6. Below is the button that will direct the user to the component along with the id needed for the dynamic path
+```ts
+import React, {useContext} from 'react';
+interface IProps {}
+const ActivityList: React.FC<IProps> = (props) => {
+    const activityStore = useContext(ActivityStore);
+    return (
+        <Segment clearing>
+            <Item.Group divided>
+                {activityStore.activitiesByDate.map(activity =>(
+                    <Item key={activity.id}>
+                        <Item.Content>
+                            <Item.Header as='a'>{activity.title}</Item.Header>
+                            <Item.Meta>{activity.date}</Item.Meta>
+                            <Item.Description>
+                                <div>{activity.description}</div>
+                                <div>{activity.city}, {activity.venue}</div>
+                            </Item.Description>
+                            //Below we use string interpolation to set the dynamic id needed for the component to render correctly below
+                            <Button as={Link} to={`/activity/${activity.id}`} floated='right' content='view' color='blue'/>
+                            <Label basic content={activity.category}/>
+                        </Item.Content>
+                    </Item>
+                ))}
+            </Item.Group>
+        </Segment>
+    );
+};
+
+export default observer(ActivityList);
+```
+7. Here we will use that id set above in the route path to load the correct data within the ActivityDetails component.
+```ts
+import React, {useContext, useEffect} from 'react';
+import {Card, Image} from "semantic-ui-react";
+import Button from "semantic-ui-react/dist/commonjs/elements/Button";
+import {observer} from "mobx-react-lite";
+import ActivityStore from '../../../app/stores/activityStore'
+import {RouteComponentProps} from "react-router";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
+//Interface is needed to define our id will be of typer string 
+interface IDetailParams {
+    id: string
+}
+
+//use RouteComponentProps<IDetailParams> to gain access to the param field
+const ActivityDetails: React.FC<RouteComponentProps<IDetailParams>> = (props) => {
+    const activityStore = useContext(ActivityStore);
+    const {activity, loadActivity, loadingInitial} = activityStore;
+    
+    //using the "useEffect" funciton, we grab the id from the url on component render to then go into 
+    //our api and fetch the correct activity before the component finishes rendering.
+    useEffect (() =>{
+        loadActivity(props.match.params.id);
+    }, [loadActivity, props.match.params.id]);
+
+
+
+    if (loadingInitial || !activity) return <LoadingComponent content='Loading Activity...' />;
+
+    return (
+        <Card fluid>
+            <Image src={require(`C:/Users/16512/source/repos/React_Core_App/client/public/assets/categoryImages/${activity!.category}.jpg`)} wrapped ui={false} />
+            <Card.Content>
+                <Card.Header>{activity!.title}</Card.Header>
+                <Card.Meta>
+                    <span>{activity!.date}</span>
+                </Card.Meta>
+                <Card.Description>
+                    {activity!.description}
+                </Card.Description>
+            </Card.Content>
+            <Card.Content extra>
+                <Button.Group widths='2'>
+                    <Button onClick={() => activityStore.setEditMode(true)} basic color='blue' content='Edit'/>
+                    <Button onClick={() => activityStore.selectActivity('')} basic color='grey' content='Cancel'/>
+                </Button.Group>
+            </Card.Content>
+        </Card>
+    );
+};
+
+export default observer(ActivityDetails);
+```
