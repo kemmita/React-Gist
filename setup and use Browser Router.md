@@ -180,3 +180,27 @@ const ActivityDetails: React.FC<RouteComponentProps<IDetailParams>> = (props) =>
 
 export default observer(ActivityDetails);
 ```
+8. Below is how you redirect after a submit of a form. 
+```ts
+import {RouteComponentProps} from "react-router";
+
+const ActivityForm: React.FC<RouteComponentProps> = (props) => {
+    const activityStore = useContext(ActivityStore);
+
+    //the funciton below would handle the submit of the form
+    const handleSubmit = () =>{
+      if (activity.id.length === 0){
+          let newActivity = {
+              ...activity,
+              id: uuid()
+          };
+          //once the form has been submitted and the data is stored, we will use a promise to use a route push to redirect the user.
+          activityStore.createActivity(newActivity).then(() => props.history.push(`/activity/${newActivity.id}`));
+      } else {
+          activityStore.editActivity(activity).then(() => props.history.push(`/activity/${activity.id}`));
+      }
+    };
+
+export default observer(ActivityForm);
+
+```
