@@ -3,7 +3,21 @@
 npm i react-router-dom
 npm install @types/react-router-dom
 ```
-2. In the index.tsx file surround your app component with BrowserRouter
+1.1 create a new file title ScrollToTop. React does not by default scroll to the top when changing pages, this will fix that.
+```ts
+import React, {useEffect} from 'react';
+import {withRouter} from "react-router-dom";
+
+const ScrollToTop = ({children, location: {pathname}}: any) => {
+    useEffect(() =>{
+        window.scrollTo(0,0);
+    }, [pathname]);
+    return children;
+};
+
+export default withRouter(ScrollToTop);
+```
+2. In the index.tsx file surround your app component with BrowserRouter and ScrollToTop like so
 ```ts
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -11,10 +25,12 @@ import {BrowserRouter} from 'react-router-dom';
 import './app/layout/index.css';
 import App from './app/layout/App';
 import * as serviceWorker from './serviceWorker';
+import ScrollToTop from "./app/layout/ScrollToTop";
 
-ReactDOM.render(<BrowserRouter> <App /> </BrowserRouter>, document.getElementById('root'));
+ReactDOM.render(<BrowserRouter> <ScrollToTop>  <App /> </ScrollToTop> </BrowserRouter>, document.getElementById('root'));
 
 serviceWorker.unregister();
+
 ```
 3. Now inside of our App component we will define the routes and the components that will belong to said route.
 ```ts
