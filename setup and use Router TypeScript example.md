@@ -227,3 +227,15 @@ const ActivityForm: React.FC<RouteComponentProps> = (props) => {
 export default observer(ActivityForm);
 
 ```
+9. Below is how you redirect from any file surrounded by the Router.
+```ts
+import axios, {AxiosResponse} from 'axios';
+import { history } from "../../index";
+
+axios.interceptors.response.use(undefined, error => {
+    if(error.response.status === 404) {
+       //push will redirect you to the path you define which in trun will look for the path defined in App.tsx
+       history.push('/notfound');
+    }
+});
+```
