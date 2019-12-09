@@ -42,12 +42,17 @@ const App = () => {
     return (
         <Fragment>
             <NavBar />
-            <Container style={{marginTop: '7em'}}>
-            //below we have three different paths with their defined components.
-                <Route exact path='/' component={HomePage}/>
-                <Route exact path='/activities' component={ActivityDashboard}/>
-                <Route exact path='/createActivity' component={ActivityForm}/>
-            </Container>
+                      <Container style={{marginTop: '7em'}}>
+            //below we have three different paths with their defined components. If we do not use the Switch component from 
+            //react router, then we will run into the issue of loading the notfound component. Notfound will be displayed
+            //whenever a incorrect route is supllied as it has no path
+                        <Switch>
+                            <Route exact path='/activities' component={ActivityDashboard}/>
+                            <Route exact path='/activity/:id' component={ActivityDetails}/>
+                            <Route key={location.key} exact path={['/createActivity', '/manage/:id']} component={ActivityForm}/>
+                            <Route component={NotFound}/>
+                        </Switch>
+                    </Container>
         </Fragment>
     );
 };
