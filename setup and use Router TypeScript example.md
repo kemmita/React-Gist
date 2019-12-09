@@ -17,20 +17,22 @@ const ScrollToTop = ({children, location: {pathname}}: any) => {
 
 export default withRouter(ScrollToTop);
 ```
-2. In the index.tsx file surround your app component with BrowserRouter and ScrollToTop like so
+2. In the index.tsx file surround your app component with Router and ScrollToTop like so
 ```ts
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {BrowserRouter} from 'react-router-dom';
+import {Router} from 'react-router-dom';
 import './app/layout/index.css';
 import App from './app/layout/App';
 import * as serviceWorker from './serviceWorker';
 import ScrollToTop from "./app/layout/ScrollToTop";
+import createBrowserHistory from "history/createBrowserHistory";
 
-ReactDOM.render(<BrowserRouter> <ScrollToTop>  <App /> </ScrollToTop> </BrowserRouter>, document.getElementById('root'));
+export const history = createBrowserHistory();
+
+ReactDOM.render(<Router history={history}> <ScrollToTop>  <App /> </ScrollToTop> </Router>, document.getElementById('root'));
 
 serviceWorker.unregister();
-
 ```
 3. Now inside of our App component we will define the routes and the components that will belong to said route.
 ```ts
