@@ -307,4 +307,205 @@ const HomePage: React.FC = () => {
 export default HomePage;
 
 ```
-11. 
+11. Below is the ErrorMessage component we will use for the forms
+```ts
+import React from 'react';
+import {observer} from "mobx-react-lite";
+import {AxiosResponse} from "axios";
+import {Message} from "semantic-ui-react";
+
+interface IProps {
+    error: AxiosResponse,
+    text: string
+}
+
+const ErrorMessage: React.FC<IProps> = (props) => {
+    return (
+        <Message error>
+            <Message.Header>{props.error.statusText}</Message.Header>
+            {props.text && <Message.Content content={props.text}/>}
+        </Message>
+    );
+};
+
+export default observer(ErrorMessage);
+
+```
+12. Below is the registration from
+```ts
+import React, {useContext} from 'react';
+import {observer} from "mobx-react-lite";
+import {RootStoreContext} from "../../app/stores/rootStore";
+import {Form as FinalForm, Field} from 'react-final-form';
+import {Button, Form, Header} from 'semantic-ui-react';
+import TextInput from "../../app/common/form/TextInput";
+import {IUserFormValues} from "../../app/Interfaces/user";
+import {FORM_ERROR} from "final-form";
+import {
+    combineValidators,
+    composeValidators,
+    isRequired,
+    createValidator
+} from "revalidate";
+import ErrorMessage from "../../app/common/form/ErrorMessage";
+
+const customIsRequired = isRequired({ message: 'Required' })
+
+const isValidEmail = createValidator(
+    message => value => {
+        if (value && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(value)) {
+            return message
+        }
+    },
+    'Invalid email address'
+);
+
+const isVlaidPassword = createValidator(
+    message => value => {
+        if (value && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/i.test(value)) {
+            return message
+        }
+    },
+    'Invalid password'
+);
+
+const validate = combineValidators({
+    email: composeValidators(
+        customIsRequired,
+        isValidEmail
+    )(),
+    password: composeValidators(
+        customIsRequired,
+        isVlaidPassword
+    )('password'),
+    displayName: isRequired('displayName'),
+    username: isRequired('username'),
+});
+
+const RegisterForm: React.FC = (props) => {
+    const rootStore = useContext(RootStoreContext);
+    const {userStore} = rootStore;
+    return (
+        <FinalForm
+            validate={validate}
+            onSubmit={(values:IUserFormValues) => userStore.register(values).catch(err => ({
+                [FORM_ERROR] : err
+            }))}
+            render={({handleSubmit, submitting, submitError, invalid, pristine, dirtySinceLastSubmit,values}) =>(
+                <Form onSubmit={handleSubmit} error>
+                    <Header content='Register Now!' textAlign='center' style={{color: '#1E6F9D'}} size={'large'}/>
+                    <Field name='email' component={TextInput} placeholder='Email' />
+                    <Field name='displayName' component={TextInput} placeholder='DisplayName' />
+                    <Field name='username' component={TextInput} placeholder='Username' />
+                    <Field name='password' type='password' component={TextInput} placeholder='Password' />
+                    {submitError && !dirtySinceLastSubmit && <ErrorMessage error={submitError.message} text={'If you got this far, you forgot to place an uppercase letter in the password!'}/>}
+                    <br/>
+                    <Button fluid disabled={invalid && !dirtySinceLastSubmit || pristine} style={{backgroundColor: '#1E6F9D', color: 'white'}} content='Register' loading={submitting}/>
+                </Form>
+            )}
+        />
+    );
+};
+
+export default observer(RegisterForm);
+
+```
+13. Below is the Login Form
+```ts
+import React, {useContext} from 'react';
+import {observer} from "mobx-react-lite";
+import {RootStoreContext} from "../../app/stores/rootStore";
+import {Form as FinalForm, Field} from 'react-final-form';
+import {Button, Form, Header} from 'semantic-ui-react';
+import TextInput from "../../app/common/form/TextInput";
+import {IUserFormValues} from "../../app/Interfaces/user";
+import {FORM_ERROR} from "final-form";
+import {combineValidators, isRequired} from "revalidate";
+import ErrorMessage from "../../app/common/form/ErrorMessage";
+
+const validate = combineValidators({
+   email: isRequired('email'),
+   password: isRequired('password')
+});
+
+const LoginForm: React.FC = (props) => {
+    const rootStore = useContext(RootStoreContext);
+    const {userStore} = rootStore;
+    return (
+        <FinalForm
+            validate={validate}
+            onSubmit={(values:IUserFormValues) => userStore.login(values).catch(err => ({
+                [FORM_ERROR] : err
+            }))}
+            render={({handleSubmit, submitting, form, submitError, invalid, pristine, dirtySinceLastSubmit}) =>(
+                <Form onSubmit={handleSubmit} error>
+                    <Header content='Login Now!' textAlign='center' style={{color: '#1E6F9D'}} size={'large'}/>
+                    <Field name='email' component={TextInput} placeholder='Email' />
+                    <Field name='password' type='password' component={TextInput} placeholder='Password' />
+                    {submitError && !dirtySinceLastSubmit && <ErrorMessage error={submitError.message} text={'Invalid email or password'}/>}
+                    <br/>
+                    <Button fluid disabled={invalid && !dirtySinceLastSubmit || pristine} style={{backgroundColor: '#1E6F9D', color: 'white'}} content='Login' loading={submitting}/>
+                </Form>
+            )}
+        />
+    );
+};
+
+export default observer(LoginForm);
+```
+14. Below is the agent, note the notes.
+```ts
+import axios, { AxiosResponse } from 'axios';
+import { history } from '../..';
+import { toast } from 'react-toastify';
+import {IActivity} from "../Interfaces/activity";
+import {IUser, IUserFormValues} from "../Interfaces/user";
+
+axios.defaults.baseURL = 'https://localhost:44396/api';
+
+//this will ensre that we send the token up with each request to the api
+axios.interceptors.request.use((config) =>{
+    const token = window.localStorage.getItem('jwt');
+    if (token){
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, error => {return Promise.reject(error)});
+
+axios.interceptors.response.use(undefined, error => {
+    if (error.message === 'Network Error' && !error.response) {
+        toast.error('Network error - make sure API is running!')
+    }
+    const {status, data, config} = error.response;
+    if (status === 400 || 404 && config.method === 'get' && data.errors.hasOwnProperty('id')) {
+        history.push('/notfound')
+    }
+    if (status === 500) {
+        toast.error('Server error - check the terminal for more info!')
+    }
+    throw error;
+});
+
+const responseBody = (response: AxiosResponse) => response.data;
+
+const sleep = (ms: number) => (response: AxiosResponse) =>
+    new Promise<AxiosResponse>(resolve => setTimeout(() => resolve(response), ms));
+
+const requests = {
+    get: (url: string) => axios.get(url).then(sleep(300)).then(responseBody),
+    post: (url: string, body: {}) => axios.post(url, body).then(responseBody),
+    put: (url: string, body: {}) => axios.put(url, body).then(responseBody),
+    del: (url: string) => axios.delete(url).then(responseBody)
+};
+
+const User = {
+  current: (): Promise<IUser> => requests.get('/user'),
+  login: (user: IUserFormValues): Promise<IUser> => requests.post('/user/login', user),
+  register: (user: IUserFormValues): Promise<IUser> => requests.post('/user/register', user)
+};
+
+export default {
+    Activities,
+    User
+}
+```
