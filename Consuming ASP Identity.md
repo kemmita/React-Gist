@@ -509,3 +509,96 @@ export default {
     User
 }
 ```
+15 Below are the changeds we used for email confirmation. Start with the Agent class
+```ts
+axios.interceptors.response.use(undefined, error => {
+    if (error.message === 'Network Error' && !error.response) {
+        toast.error('Network error - make sure API is running!')
+    }
+    const {status, data, config} = error.response;
+    if (status === 400 || 404 && config.method === 'get' && data.errors.hasOwnProperty('id')) {
+        history.push('/notfound')
+    }
+    if (status === 500) {
+        toast.error('Server error - check the terminal for more info!')
+    }
+    // checking to see if the email not confirmed error is returned.
+    if (status === 401) {
+        toast.error('Pleas confirm your email address!')
+    }
+    throw error;
+});
+```
+16. in the user store I added this
+```ts
+    // will need this for our HomePage Component
+    @observable registerComplete: boolean = false;
+    
+    // modified the register action to this
+        @action register = async (values: IUserFormValues) =>{
+        try {
+            await agent.User.register(values);
+            runInAction('Register user success', () =>{
+                this.registerComplete = true;
+                history.push('/');
+            });
+        }catch (e) {
+            runInAction('Error with user Registration', () =>{
+                throw e;
+            });
+        }
+    };
+```
+17. Below is the homepage, note the changes.
+```ts
+import React, {Fragment, useContext, useEffect} from 'react';
+import {Container} from "semantic-ui-react";
+import {Link} from "react-router-dom";
+import {Button, Segment, Image, Header} from "semantic-ui-react";
+import {RootStoreContext} from "../../app/stores/rootStore";
+import LoginForm from "../user/LoginForm";
+import RegisterForm from "../user/RegisterForm";
+import {observer} from "mobx-react-lite";
+
+const HomePage: React.FC = () => {
+    const rootStore = useContext(RootStoreContext);
+    const{userStore, modalStore} = rootStore;
+    
+    // added a useeffect to check if registration form was submited successfuly. If so, I open the loginmodal
+    useEffect (() =>{
+        if (userStore.registerComplete) {
+            modalStore.openModal(<LoginForm />)
+        }
+    }, );
+
+    return (
+        <Segment inverted textAlign='center' vertical className='masthead' >
+            <Container text>
+                <Header as='h1' inverted>
+                    <Image size='massive' src='/assets/logo.png' alt='logo' style={{marginBottom: 12}}/>
+                    Reactivities
+                </Header>
+                {userStore.isLoggedIn && userStore.user ?
+                    <Fragment>
+                        <Header as='h2' inverted content={`Welcome Back ${userStore.user.displayName}`} />
+                        <Button as={Link} to='/activities' size='huge' inverted>
+                            Go to activities!
+                        </Button>
+                    </Fragment> :
+                    <Fragment>
+                        <Header as='h2' inverted content='Welcome to Reactivities' />
+                        <Button onClick={() => modalStore.openModal(<LoginForm />)} size='huge' inverted>
+                            Login
+                        </Button>
+                        <Button onClick={() => modalStore.openModal(<RegisterForm />)} size='huge' inverted>
+                            Register
+                        </Button>
+                    </Fragment>
+                }
+            </Container>
+        </Segment>
+    );
+};
+// made the homepage component an observer
+export default observer(HomePage);
+```
